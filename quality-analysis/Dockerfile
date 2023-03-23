@@ -10,18 +10,20 @@ ARG FLAVOUR="debian"
 # Differences :
 # - remove alpine version
 # - add GD extension
-# - add Yarn
+# - add Node 19 & Yarn
 
 # Debian PHP with dependencies needed for final image
 FROM php:${PHP_VERSION}-cli-buster AS php-base-debian
 ARG DEBIAN_LIB_DEPS="zlib1g-dev libzip-dev libbz2-dev libicu-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev"
-ARG DEBIAN_TOOL_DEPS="git graphviz make unzip gpg dirmngr gpg-agent openssh-client nodejs npm"
+ARG DEBIAN_TOOL_DEPS="git graphviz make unzip gpg dirmngr gpg-agent openssh-client curl"
 ARG TARGETARCH
 RUN  rm /etc/apt/apt.conf.d/docker-clean # enables apt caching
 RUN --mount=type=cache,target=/var/cache/apt,target=/var/cache/apt,sharing=locked,id=apt-${TARGETARCH} \
     --mount=type=cache,target=/var/lib/apt/lists,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${TARGETARCH} \
     apt-get update \
-    && apt-get install -y --no-install-recommends autoconf file g++ gcc libc-dev pkg-config re2c pkg-config ${DEBIAN_TOOL_DEPS} ${DEBIAN_LIB_DEPS}
+    && apt-get install -y --no-install-recommends autoconf file g++ gcc libc-dev pkg-config re2c pkg-config ${DEBIAN_TOOL_DEPS} ${DEBIAN_LIB_DEPS} \
+    && curl -fsSL https://deb.nodesource.com/setup_19.x | bash - \
+    && apt-get install -y nodejs
 
 # PHP with dependencies needed for final image
 FROM php-base-${FLAVOUR} AS php-base
